@@ -2,20 +2,29 @@
 #include <vector>
 using namespace std;
 
+const int MAX_KEYS_NODE = 4;
+
 struct keys_struct{
     float key_value;
-    // vector <void*> add_vect;
+    vector <void*> secondary_key;
 };
+
+
 
 // Define the B+ tree node structure
 class Node {
     bool isLeaf;
     int size;
+    keys_struct *key;
     Node ** ptr;
+    friend class BPlusTree;
+    
 public:
-
+    // constructor
     Node()
     {
+        key = new keys_struct[MAX_KEYS_NODE];
+        ptr = new Node*[MAX_KEYS_NODE+1];
         isLeaf = true;
     }
 
@@ -46,6 +55,42 @@ class BPlusTree {
 
     Node* root;
 
+    void insertKeyIntoNode ( keys_struct nodeData, Node* current, Node* child) {
+        
+        // 2 Scenarios : Still have space to add key in node OR Dont have space.
+
+        // Scenario 1. Still have space available
+        if( current->size <  MAX_KEYS_NODE ){
+
+            // Determine new key's position in node.
+            int i = 0;
+            while( nodeData.key_value > current->key[i].key_value  && i < current->size ){
+                i = i + 1;
+            }
+
+            // Using this new position, we will push back all keys and pointers by 1 space.
+            // E.g if we want to insert 4 :  [2][3][5][] becomes [2][3][4][5]
+
+            // Keys
+            for(int j = current->size; j>i; j--){
+                current->key[j] = current->key[j-1]; // We start from the back and iterate,
+            }
+
+            //Pointers
+            for(int j = current->size+1; j>i; j--){
+                current->ptr[j] = current->ptr[j-1];
+            }
+
+            //Finally we add in the key and pointer.
+            // We also increase/update node size count.
+            current->size++; 
+            current->key[i] = nodeData;
+            current->ptr[i+1] = child;
+        }
+
+        //Scenario 2 
+
+    }
 
 public:
     BPlusTree() {
@@ -54,9 +99,6 @@ public:
     }
 
 
-    void insert( keys_struct nodeData) {
-
-    }
 
     int search(int key) {
 
@@ -71,18 +113,16 @@ public:
     void print(){
 
     }
-
-
-
+};
 
 
 
 int main() {
     BPlusTree bptree;
 
-    bptree.insert(10, 100);
-    bptree.insert(20, 200);
-    bptree.insert(5, 50);
+    //bptree.insert(10, 100);
+    // bptree.insert(20, 200);
+    // bptree.insert(5, 50);
 
     // Test out to find 
 
@@ -97,8 +137,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
