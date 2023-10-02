@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <tuple>
 #include "DataLoader.h"
 
 using namespace std;
@@ -38,6 +39,50 @@ void DataLoader::load_data(){
             continue;  // Skip records with conversion errors
         }
     }
+}
+
+DatabaseStorage::DatabaseStorage(uint storageCapacity, uint blockSize){
+    this->storageCapacity = storageCapacity;
+    this->blockSize = blockSize;
+    this->blocksOccupied = 0;
+    this->blocksLeft = storageCapacity / blockSize;
+    this->storagePointer = new string[storageCapacity];
+    this->curBlockPointer = storagePointer;
+    this->offset = 0;
+}
+
+DatabaseStorage::~DatabaseStorage(){
+    delete[] this->storagePointer;
+    storagePointer = nullptr;
+}
+
+bool DatabaseStorage::blockAvailable(){
+    if (blocksLeft > 0){
+        curBlockPointer += blockSize; //allocate a block
+        blocksLeft -= 1;
+        blocksOccupied += 1;
+        offset = 0;
+        return true;
+    }else{
+        cout << "No more space available in storage" <<endl;
+        return false;
+    }
+}
+tuple<string*, uint> DatabaseStorage::writeRecord(uint recordSize){
+    if (blockSize < offset + recordSize){
+        bool blockAllocated = blockAvailable();
+        if (!blockAllocated){
+            cerr << "Unable to write record as no space available for record in the block" <<endl;
+        }
+    }
+    if (blockSize < recordSize){
+        cerr << "Unable to write record to block where record size greater than block size" << endl;
+    }
+
+    tuple<string*, uint> recordAddress(curBlockPointer, offset);
+    offset += recordSize;
+
+    return recordAddress;
 }
 
 

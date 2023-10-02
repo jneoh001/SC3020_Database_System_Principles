@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <tuple>
 
 using namespace std;
 
@@ -33,13 +34,19 @@ class DataLoader {
 
 class DatabaseStorage{
     private:
+        string *storagePointer; // starting initial pointer for database storage
+        string * curBlockPointer; // current pointer for block in database
+        uint offset; // location of record in block
+        uint storageCapacity;
         uint blockSize;
         uint blocksOccupied;
         uint blocksLeft;
     public:
         DatabaseStorage(uint storageCapacity, uint blockSize);
         ~DatabaseStorage();
-        void writeRecord(uint recordSize);
+        
+        bool blockAvailable();
+        tuple<string*, uint> writeRecord(uint recordSize);
         uint getBlockSize(){
             return blockSize;
         }
