@@ -10,7 +10,7 @@ using namespace std;
 DataLoader::DataLoader(string file_name){
     this->file_name = file_name;
     this->load_data();
-};
+}
 
 void DataLoader::load_data(){
     ifstream file(this->file_name);
@@ -39,6 +39,7 @@ void DataLoader::load_data(){
             continue;  // Skip records with conversion errors
         }
     }
+    file.close();
 }
 
 DatabaseStorage::DatabaseStorage(uint storageCapacity, uint blockSize){
@@ -49,7 +50,6 @@ DatabaseStorage::DatabaseStorage(uint storageCapacity, uint blockSize){
     this->storagePointer = new string[storageCapacity];
     this->curBlockPointer = storagePointer;
     this->offset = 0;
-    this->noOfRecords = 0;
 }
 
 DatabaseStorage::~DatabaseStorage(){
@@ -81,7 +81,6 @@ tuple<string*, uint> DatabaseStorage::writeRecord(uint recordSize){
     }
 
     tuple<string*, uint> recordAddress(curBlockPointer, offset);
-    noOfRecords++;
     offset += recordSize;
 
     return recordAddress;

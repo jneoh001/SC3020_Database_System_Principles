@@ -30,6 +30,12 @@ class DataLoader {
         void load_data();
     public:
         DataLoader(string file_name);
+        int getRecordSize(){
+            return this->records.size();
+        }
+        Record getRecordOnIndex(int index){
+            return this->records[index];
+        }
 };
 
 class DatabaseStorage{
@@ -41,7 +47,6 @@ class DatabaseStorage{
         uint blockSize;
         uint blocksOccupied;
         uint blocksLeft;
-        uint noOfRecords;
     public:
         DatabaseStorage(uint storageCapacity, uint blockSize);
         ~DatabaseStorage();
@@ -56,6 +61,9 @@ class DatabaseStorage{
         }
         uint getBlocksLeft(){
             return blocksLeft;
+        }
+        uint getSizeOfStorage(){
+            return storageCapacity;
         }
 };
 
