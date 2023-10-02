@@ -31,5 +31,16 @@ class DataLoader {
         DataLoader(string file_name);
 };
 
+class DatabaseStorage{
+    private:
+        vector<Record> records;
+    public:
+        DatabaseStorage(vector<Record> records);
+        void insert(Record record);
+        void update(Record record);
+        void remove(Record record);
+        vector<Record> get_records();
+};
+
 
 #endif

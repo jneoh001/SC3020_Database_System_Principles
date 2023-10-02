@@ -35,7 +35,6 @@ void DataLoader::load_data(){
             };
             this->records.push_back(new_record);
         } catch (const std::exception& e) {
-            cout << "Ignored row" << endl;
             continue;  // Skip records with conversion errors
         }
     }
