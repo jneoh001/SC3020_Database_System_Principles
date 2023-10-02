@@ -33,13 +33,22 @@ class DataLoader {
 
 class DatabaseStorage{
     private:
-        vector<Record> records;
+        uint blockSize;
+        uint blocksOccupied;
+        uint blocksLeft;
     public:
-        DatabaseStorage(vector<Record> records);
-        void insert(Record record);
-        void update(Record record);
-        void remove(Record record);
-        vector<Record> get_records();
+        DatabaseStorage(uint storageCapacity, uint blockSize);
+        ~DatabaseStorage();
+        void writeRecord(uint recordSize);
+        uint getBlockSize(){
+            return blockSize;
+        }
+        uint getBlocksOccupied(){
+            return blocksOccupied;
+        }
+        uint getBlocksLeft(){
+            return blocksLeft;
+        }
 };
 
 
