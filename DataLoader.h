@@ -41,6 +41,7 @@ class DatabaseStorage{
         uint blockSize;
         uint blocksOccupied;
         uint blocksLeft;
+        uint noOfRecords;
     public:
         DatabaseStorage(uint storageCapacity, uint blockSize);
         ~DatabaseStorage();

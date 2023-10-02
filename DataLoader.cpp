@@ -49,6 +49,7 @@ DatabaseStorage::DatabaseStorage(uint storageCapacity, uint blockSize){
     this->storagePointer = new string[storageCapacity];
     this->curBlockPointer = storagePointer;
     this->offset = 0;
+    this->noOfRecords = 0;
 }
 
 DatabaseStorage::~DatabaseStorage(){
@@ -80,14 +81,8 @@ tuple<string*, uint> DatabaseStorage::writeRecord(uint recordSize){
     }
 
     tuple<string*, uint> recordAddress(curBlockPointer, offset);
+    noOfRecords++;
     offset += recordSize;
 
     return recordAddress;
-}
-
-
-int main(){
-    DataLoader loader = DataLoader("games.txt");
-    cout << "Data loaded successfully!" << endl;
-    return 0;
 }
