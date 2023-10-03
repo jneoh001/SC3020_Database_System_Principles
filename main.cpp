@@ -53,10 +53,17 @@ int main(){
         keys[i].key_value = retrievedRecord->fg_pct_home;
         bptree.insert(keys[i]);
     }
+    // Create dummy data
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     keys[i].key_value = i;
+    //     bptree.insert(keys[i]);
+    // }
+
 
     cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
 
     //Display B+ tree (DEBUGGING)
-    bptree.displayTree(bptree.getRoot());
+    bptree.displayTree(bptree.getRoot(),true);
     return 0;
 }

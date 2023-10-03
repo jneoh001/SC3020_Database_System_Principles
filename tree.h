@@ -10,8 +10,7 @@ const int MAX_KEYS_NODE = 4;
 struct keys_struct
 {
     float key_value;
-    //Record* secondary_key;
-    vector<void *> secondary_key;
+    vector<void *> secondary_key; //duplicate handler
 };
 
 // Define the B+ tree node structure
@@ -27,8 +26,8 @@ public:
     // constructor
     Node(int maxsize = MAX_KEYS_NODE)
     {
-        key = new keys_struct[maxsize];
-        ptr = new Node *[maxsize + 1];
+        key = new keys_struct[maxsize]; // n keys
+        ptr = new Node *[maxsize + 1]; //n+1 pointers (store address to record + 1 to next node)
         isLeaf = true;
     }
 };
@@ -521,21 +520,23 @@ public:
     {
     }
 
-    void displayTree(Node *cursor)
+    void displayTree(Node *cursor,bool isRoot)
     {
         if (cursor != NULL)
         {
             for (int i = 0; i < cursor->size; i++)
             {
-                cout << cursor->key[i].key_value << " ";
+                cout << cursor->key[i].key_value << " "; 
             }
-            cout << "\n";
+            if (isRoot)
+                cout << "\n";
             if (cursor->isLeaf != true)
             {
                 for (int i = 0; i < cursor->size + 1; i++)
                 {
-                    displayTree(cursor->ptr[i]);
+                    displayTree(cursor->ptr[i],false);
                 }
+                cout << "\n";
             }
         }
     }
