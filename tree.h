@@ -1,3 +1,6 @@
+#ifndef TREE_H
+#define TREE_H
+
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -7,6 +10,7 @@ const int MAX_KEYS_NODE = 4;
 struct keys_struct
 {
     float key_value;
+    //Record* secondary_key;
     vector<void *> secondary_key;
 };
 
@@ -550,24 +554,25 @@ public:
     }
 };
 
-int main()
-{
-    BPlusTree bptree;
+// int main()
+// {
+//     BPlusTree bptree;
 
-    keys_struct *dummyArray = new keys_struct[300];
+//     keys_struct *dummyArray = new keys_struct[300];
 
-    // Create dummy data
-    for (int i = 0; i < 17; i++)
-    {
-        dummyArray[i].key_value = i;
-        bptree.insert(dummyArray[i]);
-    }
+//     // Create dummy data
+//     for (int i = 0; i < 17; i++)
+//     {
+//         dummyArray[i].key_value = i;
+//         bptree.insert(dummyArray[i]);
+//     }
 
-    //bptree.getKey(bptree.getRoot());
+//     //bptree.getKey(bptree.getRoot());
 
-    bptree.displayTree(bptree.getRoot());
+//     bptree.displayTree(bptree.getRoot());
 
-    // bptree.print();
+//     // bptree.print();
 
-    return 0;
-}
+//     return 0;
+// }
+#endif

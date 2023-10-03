@@ -1,9 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include "DataLoader.h"
 #include <cstring>
 #include <tuple>
 #include <vector>
+#include "DataLoader.h"
+#include "tree.h"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ int main(){
     DatabaseStorage storage(100000000,400);
     vector<tuple<string*, uint>> database;
     DataLoader loader("games.txt");
+    BPlusTree bptree;
 
     for(int i=0;i<loader.getRecordSize();i++){
         int recordSize = sizeof(loader.getRecordOnIndex(i));
@@ -28,12 +30,6 @@ int main(){
 
         //Store the address of the record in a database vector
         database.push_back(recordAddress);
-
-        // Reverse Engineer to retrieve the record
-        string* blockAddress = get<0>(recordAddress);
-        uint offset = get<1>(recordAddress);
-        Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
-        cout << "Details of record: " << retrievedRecord->fg3_pct_home << endl;
     }
 
     cout << "-------------Done Reading Database file-------------"<<"\n"<<"\n";
@@ -46,6 +42,21 @@ int main(){
     cout << "Number of blocks used for storing data: " << storage.getBlocksOccupied() << "\n";
 
     cout << "-------------Indexing records onto B+ tree-------------"<<"\n"<<"\n";
+    keys_struct *keys = new keys_struct[20];
 
+    for (int i=0;i<10;i++){
+        tuple<string*,uint>AddressOfRecord = database[i];
+        // Reverse Engineer to retrieve the record and insert into B+ plus tree
+        string* blockAddress = get<0>(AddressOfRecord);
+        uint offset = get<1>(AddressOfRecord);
+        Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
+        keys[i].key_value = retrievedRecord->fg_pct_home;
+        bptree.insert(keys[i]);
+    }
+
+    cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
+
+    //Display B+ tree (DEBUGGING)
+    bptree.displayTree(bptree.getRoot());
     return 0;
 }
