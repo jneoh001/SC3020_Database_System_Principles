@@ -21,10 +21,10 @@ class Node
 
 public:
     // constructor
-    Node()
+    Node(int maxsize = MAX_KEYS_NODE)
     {
-        key = new keys_struct[MAX_KEYS_NODE];
-        ptr = new Node *[MAX_KEYS_NODE + 1];
+        key = new keys_struct[maxsize];
+        ptr = new Node*[maxsize+1];
         isLeaf = true;
     }
 };
@@ -56,9 +56,90 @@ class BPlusTree
 
     Node *root;
 
+    void insertKeyIntoInternalNode(keys_struct entry, Node* cursor, Node* child){
+        //function to insert extra key into an internal node and point to a new child
+        //Scenario 1: Node is not full
+        //logic is same as insert
+        if(cursor->size<MAX_KEYS_NODE){
+            int i = 0, j;
+            while(entry.key_value>cursor->key[i].key_value && i<cursor->size)i++;
+            for(j=cursor->size;j>i;j--){
+                cursor->key[j] = cursor->key[j-1];
+                //move both left and right pointers
+                cursor->key[j+1] = cursor->key[j];
+            }
+            //ptr to child should be right pointer, key should be min of child
+            cursor->key[i] = entry;
+            cursor->size++;
+            cursor->ptr[i+1] = child;
+        }
+        else{
+            Node* newInternal = new Node;
+            newInternal->isLeaf = false;
+            Node* virtualNode = new Node(MAX_KEYS_NODE+1);
+            virtualNode->isLeaf = false;
+            for(int i=0;i<MAX_KEYS_NODE;i++){
+                virtualNode->key[i] = cursor->key[i];
+                virtualNode->ptr[i] = cursor->ptr[i];
+            }
+            //rightmost pointer
+            virtualNode->ptr[MAX_KEYS_NODE] = cursor->ptr[MAX_KEYS_NODE];
+            int i = 0, j;
+            while (virtualNode->key[i].key_value<entry.key_value && i<MAX_KEYS_NODE)i++;
+            for(j=MAX_KEYS_NODE+1;j>i;j--){
+                virtualNode->key[j] = virtualNode->key[j-1];
+                //move only right pointers
+                virtualNode->ptr[j+1] = virtualNode->ptr[j];
+            }
+            virtualNode->key[i] = entry;
+            virtualNode->ptr[i+1] = child;
+            cursor->size = (MAX_KEYS_NODE+1)/2;
+            newInternal->size = MAX_KEYS_NODE - cursor->size;
+            //move both elements and pointers to new node
+            //key[cursorsize] is moved up a level
+            for(i=0,j=cursor->size+1;i<newInternal->size;i++,j++){
+                newInternal->key[i] = virtualNode->key[j];
+                newInternal->ptr[i] = virtualNode->ptr[j];
+            }
+            //rightmost pointer
+            newInternal->ptr[newInternal->size] = virtualNode->ptr[MAX_KEYS_NODE+2];
+            if(cursor==root){
+                rootSplitter(cursor, newInternal, cursor->key[cursor->size]);
+            }
+            else{
+                //recur
+            }
+            nodeCleaner(cursor);
+        }
+    }
+
+    //creates a new root node when the old root node overflows
+    void* rootSplitter(Node* oldRoot, Node* newChild, keys_struct newkey){
+        Node *newRoot = new Node;
+        newRoot->key[0] = newkey;
+        newRoot->ptr[0] = oldRoot;
+        newRoot->ptr[1] = newChild;
+        newRoot->isLeaf = false;
+        newRoot->size = 1;
+        root = newRoot;
+    }
+
+    //removes all keys and ptrs in a node after index nodesize
+    void* nodeCleaner(Node* cursor){
+        keys_struct cleaner;
+        for (int i=cursor->size;i<MAX_KEYS_NODE;i++){
+            cursor->key[i] = cleaner;
+            cursor->ptr[i] = nullptr;
+        }
+    }
+
+    //
+    Node* findParent(Node* child){
+        
+    }
+
     void insertInternal(keys_struct nodeData, Node *current, Node *child)
     {
-
         // 2 Scenarios : Still have space to add key in node OR Dont have space.
 
         // Scenario 1. Still have space available
@@ -156,11 +237,151 @@ public:
         // Initialize the B+ tree
         root = NULL;
     }
+  
+    Node* search(float key) {
+        
+        return nullptr; 
+    }
+  
+    void insert(keys_struct entry){
+        //Tree is empty
+        if (root==NULL){
+            root = new Node;
+            root->key[0] = entry;
+            root->isLeaf = true;
+            root->size = 1;
+            return;
+        }
+        //Tree is not empty
+        {
+            Node* cursor = root;
+            Node* parent;
 
-    int search(int key)
-    {
+            //Check if key in tree
+            Node* searcher;
+            searcher = search(entry.key_value);
+            if (searcher != nullptr){
+                for(int i=0;i<searcher->size;i++){
+                    if(searcher->key[i].key_value == entry.key_value){
+                        //push entire secondary key without checking like FAQ 9
+                        searcher->key[i].secondary_key.push_back(entry.secondary_key[0]);
+                        break;
+                    }
+                }
+                return;
+            }
 
-        return -1;
+            //Search for node to insert new key
+            while(cursor->isLeaf != true){
+                parent = cursor;
+                for(int i=0;i<cursor->size;i++){
+                    //Search for key > entry key, go left ptr of key
+                    if(entry.key_value<cursor->key[i].key_value){
+                        cursor = cursor->ptr[i];
+                        break;
+                    }
+                    //If entry key is greater than all keys in node
+                    if(i==cursor->size-1){
+                        cursor=cursor->ptr[i+1];
+                        break;
+                    }
+                }
+            }
+
+            //Attempt to insert the new key
+            //If node is not full
+            if(cursor->size<MAX_KEYS_NODE){
+                int i = 0;
+                while(cursor->key[i].key_value<entry.key_value && i<cursor->size) i++;
+                for(int j=cursor->size;j>i;j--){
+                    cursor->key[j] = cursor->key[j-1];
+                    //If node is not full, right ptr of leaf node will be null, except ptr to next node
+                    cursor->ptr[j] = cursor->ptr[j-1];
+                }
+                cursor->key[i] = entry;
+                cursor->size++;
+                //cursor->ptr[i] = entryptr;
+                //need a ptr to record
+            }
+            else{
+                //Node is full
+                //Create a new leaf node
+                Node* newLeaf = new Node;
+                //Create a virtual node size MAX_KEYS_NODE + 1
+                keys_struct virtualNode[MAX_KEYS_NODE+1];
+                for (int i=0;i<MAX_KEYS_NODE;i++){
+                    virtualNode[i] = cursor->key[i];
+                }
+                int i = 0, j;
+                //Search for position to insert entry, maximum is at MAX+1
+                while (virtualNode[i].key_value<entry.key_value && i<MAX_KEYS_NODE)i++;
+                for(int j=MAX_KEYS_NODE+1;j>i;j--){
+                    virtualNode[j] = virtualNode[j-1];
+                }
+                virtualNode[i] = entry;
+                //default isLeaf = true but just in case
+                newLeaf->isLeaf = true;
+                //Split the cursor node
+                cursor->size = (MAX_KEYS_NODE+1)/2;
+                newLeaf->size = (MAX_KEYS_NODE+1) - cursor->size;
+                //temp node for later
+                Node* temp = cursor->ptr[MAX_KEYS_NODE];
+                //place keys into leafnodes, until new key
+                //Scenario 1: new key is in the left node
+                if(i<cursor->size){
+                    //move all keys and ptr into larger node first
+                    for(int j=0,k=cursor->size;j<newLeaf->size;j++,k++){
+                        newLeaf->key[j] = virtualNode[k];
+                        newLeaf->ptr[j] = cursor->ptr[k-1];
+                        //All keys to the right of i are shifted right by 1
+                        //k has no termination condition, it should never = MAX+1
+                    }
+                    //move all keys and ptr to the right of new key
+                    for(int j=cursor->size-1;j>i;j--){
+                        cursor->key[j] = cursor->key[j-1];
+                        cursor->ptr[j] = cursor->ptr[j-1];
+                    }
+                    //insert new key and ptr at i
+                    cursor->key[i] = entry;
+                    //cursor->ptr[i] = entryptr
+                }else{
+                    //Scenario 2: new key is in the right node
+                    //move all keys and ptr to the left of i into the right node
+                    int j = cursor->size, k=0;
+                    while(j<i,k<newLeaf->size){
+                        newLeaf->key[k] = cursor->key[j];
+                        newLeaf->ptr[k] = cursor->ptr[j];
+                        k++;j++;
+                    }
+                    //insert newkey and newptr
+                    newLeaf->key[k] = entry;
+                    //newLeaf->ptr[k] = entryptr;
+                    k++;
+                    //insert the rest of the keys and ptrs
+                    while(j<MAX_KEYS_NODE,k<newLeaf->size){
+                        newLeaf->key[k] = cursor->key[j];
+                        newLeaf->ptr[k] = cursor->ptr[j];
+                        k++;j++;
+                    }
+                }
+                //clean left node after cursorsize
+                nodeCleaner(cursor);
+                //New leafnode points to next node
+                //Cursor points to new leafnode
+                newLeaf->ptr[MAX_KEYS_NODE] = temp;
+                cursor->ptr[MAX_KEYS_NODE] = newLeaf;
+                //modify the parent
+                //Scenario 1: cursor is root node
+                if(cursor == root){
+                    //Create a new root
+                    rootSplitter(cursor, newLeaf, newLeaf->key[0]);
+                }else{
+                    //Scenario 2: Cursor is not a root node
+                    //Insert new key in parent node
+                    insertKeyIntoInternalNode(newLeaf->key[0], parent, newLeaf);
+                }
+            }
+        }
     }
 
     void remove(int key)
@@ -182,9 +403,8 @@ int main()
 
     // Test out to find
 
-    int result = bptree.search(20);
-    if (result != -1)
-    {
+    Node* result = bptree.search(20);
+    if (result != nullptr) {
         std::cout << "Key 20 found with value: " << result << std::endl;
     }
     else
