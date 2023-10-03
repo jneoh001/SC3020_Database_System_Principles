@@ -4,7 +4,6 @@
 //
 //  Created by Si En on 19/9/23.
 //
-
 #include "SC3020.hpp"
 #include <iostream>
 #include <time.h>
