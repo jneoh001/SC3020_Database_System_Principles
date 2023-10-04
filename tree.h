@@ -11,6 +11,10 @@ struct keys_struct
 {
     float key_value;
     vector<void *> secondary_key; //duplicate handler
+    void reset(){
+        key_value = NULL;
+        secondary_key.clear();
+    }
 };
 
 // Define the B+ tree node structure
@@ -29,6 +33,12 @@ public:
         key = new keys_struct[maxsize]; // n keys
         ptr = new Node *[maxsize + 1]; //n+1 pointers (store address to record + 1 to next node)
         isLeaf = true;
+    }
+
+    ~Node(){
+        delete[] key;
+        delete[] ptr;
+        delete this;
     }
 };
 
@@ -137,17 +147,16 @@ class BPlusTree
         newRoot->isLeaf = false;
         newRoot->size = 1;
         root = newRoot;
-        cout << "root splitted" << endl;
+        //cout << "root splitted" << endl;
     }
 
     // removes all keys and ptrs in a node after index nodesize
     void nodeCleaner(Node *cursor)
     {
         //cout << "node is being cleaned" << endl;
-        keys_struct cleaner;
         for (int i = cursor->size; i < MAX_KEYS_NODE; i++)
         {
-            cursor->key[i] = cleaner;
+            cursor->key[i].reset();
             cursor->ptr[i] = nullptr;
         }
     }
@@ -174,6 +183,15 @@ class BPlusTree
             }
         }
         return parent;
+    }
+
+    void merge(Node* leftNode, Node* rightNode){
+        for(int i=leftNode->size, j=0;j<rightNode->size;i++,j++){
+                leftNode->key[i] = rightNode->key[j];
+                leftNode->ptr[i] = rightNode->ptr[j];
+            }
+            leftNode->ptr[MAX_KEYS_NODE] = rightNode->ptr[MAX_KEYS_NODE];
+            leftNode->size += rightNode->size;
     }
 
     void insertInternal(keys_struct nodeData, Node *current, Node *child)
@@ -273,6 +291,138 @@ class BPlusTree
         }
     }
 
+    void removeInternal (keys_struct x, Node* cursor, Node* child){
+        int i;
+    if (cursor==root){
+        if (cursor->size==1){ //if only 1 key is left
+            for (i=0;i<2;i++){
+                if (cursor->ptr[i]==child){//the first/ second pointer points to the child
+                    delete[] child->key;
+                    delete[] child->ptr;
+                    delete child;
+                    root=cursor->ptr[i]; //become the root
+                    delete[] cursor->key;
+                    delete[] cursor-> ptr;
+                    delete cursor;
+                    return;
+                }
+            }
+        }
+    }
+    //delete the KEY
+    int j;
+    for (j=0; j<cursor->size;j++){
+        if (cursor->key[j].key_value==x.key_value){
+            break;
+        }
+    }
+    for (i=j; i<cursor->size; i++){ // continue from wherever j stopped; move keys forward
+        cursor->key[i]=cursor->key[i+1];
+    }
+    //delete the empty NODE
+    for (j=0; j<cursor->size+1; j++){
+        if (cursor->ptr[j]==child){
+            break;
+        }
+    }
+    for (int i=j; i<cursor->size+1;i++){
+        cursor->ptr[i]=cursor->ptr[i+1]; //pointer moved forward
+    }
+    cursor->size--;
+    if (cursor->size>=(MAX_KEYS_NODE+1)/2-1){ //check for too little keys
+        return;
+    }
+    if (cursor==root){
+        return;
+    }
+    
+    Node* parent= findParent(root,cursor);//redefine parent
+    int leftsib, rightsib;
+    for (int i=0; i<parent->size+1; i++){
+        if (parent->ptr[i]==cursor){
+            leftsib=i-1;
+            rightsib=i+1;
+            break;
+        }
+    }
+    //Same logic as remove
+    if (leftsib>=0){
+        Node* leftNode=parent->ptr[leftsib];
+        if (leftNode->size>=(MAX_KEYS_NODE+1)/2){
+            for (int i=cursor->size;i>0; i--){
+                cursor->key[i]=cursor->key[i-1];
+            }
+            cursor->key[0]=parent->key[leftsib];
+            parent->key[leftsib]=leftNode->key[leftNode->size-1];
+            for(int i=cursor->size+1;i>0;i--){
+                cursor->ptr[i]=cursor->ptr[i-1];
+            }
+            
+            cursor->ptr[0]=leftNode->ptr[leftNode->size];
+            cursor->size++;
+            leftNode->size--;
+            return;
+        }
+    }
+    if (rightsib<=parent->size){
+        Node* rightNode=parent->ptr[rightsib];
+        if (rightNode->size>=(MAX_KEYS_NODE+1)/2){
+            cursor->key[cursor->size]=parent->key[i];
+            parent->key[i]=rightNode->key[0];
+            for (int i = 0; i < rightNode->size -1; i++)
+            {
+                rightNode->key[i] = rightNode->key[i+1];
+            }
+            for (int i = 0; i < rightNode->size; ++i)
+            {
+                rightNode->ptr[i] = rightNode->ptr[i+1];
+            }
+            
+            cursor->size++;
+            rightNode->size--;
+            return;
+        }
+    }
+    //need to do merging
+    
+    if (leftsib>=0){
+        Node* leftNode=parent->ptr[leftsib];
+        leftNode->key[leftNode->size]=parent->key[leftsib];
+        
+        for(int i = leftNode->size+1, j = 0; j < cursor->size; j++)
+        {
+            leftNode->key[i] = cursor->key[j];
+        }
+        for(int i = leftNode->size+1, j = 0; j < cursor->size+1; j++)
+        {
+            leftNode->ptr[i] = cursor->ptr[j];
+            cursor->ptr[j] = NULL;
+        }
+        leftNode->size += cursor->size+1;
+        cursor->size = 0;
+        removeInternal(parent->key[leftsib], parent, cursor); //recursive
+    }
+    
+    else if(rightsib<=parent->size){
+        Node *rightNode=parent->ptr[rightsib];
+        cursor->key[cursor->size]=parent->key[rightsib-1];
+        
+        for(int i = cursor->size+1, j = 0; j < rightNode->size; j++)
+        {
+            cursor->key[i] = rightNode->key[j];
+        }
+        for(int i = cursor->size+1, j = 0; j < rightNode->size+1; j++)
+        {
+            cursor->ptr[i] = rightNode->ptr[j];
+            rightNode->ptr[j] = NULL;
+        }
+        cursor->size += rightNode->size+1;
+        rightNode->size = 0;
+        
+        removeInternal(parent->key[rightsib-1], parent, rightNode);
+    }
+}
+
 public:
     BPlusTree()
     {
@@ -361,7 +511,7 @@ public:
                         break;
                     }
                 }
-                cout << "how many searches" << endl;
+                //cout << "how many searches" << endl;
                 return;
             }
             // Search for node to insert new key
@@ -496,14 +646,8 @@ public:
                 {
                     // Create a new root
                     // rootSplitter(cursor, newLeaf, newLeaf->key[0]);
-                    cout << "call root splitter" << endl;
-                    Node* newRoot = new Node;
-                    newRoot->key[0] = newLeaf->key[0];
-                    newRoot->ptr[0] = cursor;
-                    newRoot->ptr[1] = newLeaf;
-                    newRoot->isLeaf = false;
-                    newRoot->size = 1;
-                    root = newRoot;
+                    //cout << "call root splitter" << endl;
+                    rootSplitter(cursor, newLeaf, newLeaf->key[0]);
                     //cout << "created new root" << endl;
                 }
                 else
@@ -516,8 +660,135 @@ public:
         }
     }
 
-    void remove(int key)
+    void remove(keys_struct key)
     {
+        //nothing to remove
+        if(root==NULL){
+            return;
+        }
+        //search function cannot be used because we need to track parent and siblings
+        //traverse to leaf node containing key, track parent, leftsibling, rightsibling for merging
+        Node* cursor = root;
+        Node* parent;
+        int leftSibling, rightSibling;
+        while(cursor->isLeaf == false){
+            //set parent as cursor before going into next node
+            parent = cursor;
+            for(int i=0;i<cursor->size;i++){
+                if(key.key_value<cursor->key[i].key_value){
+                    //leftsibling and rightsibling are int, put checking outside of loop
+                    leftSibling = i-1;
+                    rightSibling = i+1;
+                    cursor = cursor->ptr[i];
+                    break;
+                }
+                if(i==cursor->size-1){
+                    leftSibling = i;
+                    rightSibling = i+2;
+                    cursor = cursor->ptr[i+1];
+                    break;
+                }
+            }
+        }
+        //search for key in node
+        int i;
+        for(i=0;i<cursor->size;i++){
+            if(cursor->key[i].key_value == key.key_value){
+                //reset all values at i
+                cursor->key[i].reset();
+                cursor->ptr[i] = nullptr;
+                break;
+            }
+            //return if last iteration without finding
+            if(i==cursor->size-1){
+                return;
+            }
+        }
+        cursor->size--;
+        //move all keys and ptr to the right of found key to the left
+        //max number of keys is maxkeysnode-1, no illegal access should occur
+        for(int j=i;j<cursor->size;j++){
+            cursor->key[j] = cursor->key[j+1];
+            cursor->ptr[j] = cursor->ptr[j+1];
+        }
+        //remove last key and ptr (unnecessary but just in case)
+        cursor->key[cursor->size].reset();
+        cursor->ptr[cursor->size] = nullptr;
+        if(cursor==root){
+            //if cursor is at root, no more work to do
+            return;
+        }
+        if(cursor->size>=(MAX_KEYS_NODE+1)/2){
+            //minimum size for leaf node is max+1/2 floor
+            return;
+        }
+        //check for borrowing first
+        //check for leftsibling and rightsibling now
+        if(leftSibling>-1){
+            Node *leftNode = parent->ptr[leftSibling];
+            //possible to transfer if size > minimum
+            if(leftNode->size>(MAX_KEYS_NODE+1)/2){
+                //move all keys and pointers right to make space
+                for(int i=cursor->size;i>0;i--){
+                    cursor->key[i] = cursor->key[i-1];
+                    cursor->ptr[i] = cursor->ptr[i-1];
+                }
+                //update sizes before transfer
+                cursor->size++;
+                leftNode->size--;
+                //transfer
+                cursor->key[0] = leftNode->key[leftNode->size];
+                cursor->ptr[0] = leftNode->ptr[leftNode->size];
+                //clean leftnode
+                leftNode->key[leftNode->size].reset();
+                leftNode->ptr[leftNode->size] = nullptr;
+                //update parent (key will always reflect rightpointer minimum value)
+                parent->key[leftSibling] = cursor->key[0];
+                return;
+            }
+        }
+        if(rightSibling <= parent->size){
+            Node *rightNode = parent->ptr[rightSibling];
+            //possible to transfer if size > min
+            if(rightNode->size > (MAX_KEYS_NODE+1)/2){
+                //transfer first before size update
+                cursor->key[cursor->size] = rightNode->key[0];
+                cursor->ptr[cursor->size] = rightNode->ptr[0];
+                //update size
+                cursor->size++;
+                rightNode->size--;
+                //shift all keys and ptrs left to fill space in rightnode
+                for(int i=0;i<rightNode->size;i++){
+                    rightNode->key[i] = rightNode->key[i+1];
+                    rightNode->ptr[i] = rightNode->ptr[i+1];
+                }
+                //clean rightnode
+                rightNode->key[rightNode->size].reset();
+                rightNode->ptr[rightNode->size] = nullptr;
+                //update parent
+                parent->key[rightSibling-1] = rightNode->key[0];
+                return;
+            }
+        }
+        //if cannot borrow, must merge
+        if(leftSibling>-1){
+            Node* leftNode = parent->ptr[leftSibling];
+            //transfer all keys and pointers to leftnode, maintain pointer to new next leaf node at max
+            merge(leftNode, cursor);
+            //call removeinternal
+            removeInternal(parent->key[leftSibling], parent, cursor);
+            cursor->~Node();
+        }else{
+            //if left sibling does not exist, right sibling must exist since cursor is not root
+            Node* rightNode = parent->ptr[rightSibling];
+            //transfer keys and ptrs to cursor, maintain pointer to next leaf
+            for(int i=cursor->size, j=0;j<rightNode->size;i++,j++){
+                //same as above but cursor as leftnode
+                merge(cursor, rightNode);
+                removeInternal(parent->key[rightSibling-1], parent, rightNode);
+                rightNode->~Node();
+            }
+        }
     }
 
     void displayTree(Node *cursor,bool isRoot)
