@@ -196,13 +196,13 @@ class BPlusTree
 
     void insertInternal(keys_struct nodeData, Node *current, Node *child)
     {
-        cout << "insertInternal start running" << endl;
+        //cout << "insertInternal start running" << endl;
         // 2 Scenarios : Still have space to add key in node OR Dont have space.
 
         // Scenario 1. Still have space available
         if (current->size < MAX_KEYS_NODE)
         {
-            cout << "scenario 1" << endl;
+            //cout << "scenario 1" << endl;
             // Determine new key's position in node.
             int i = 0;
             while (nodeData.key_value > current->key[i].key_value && i < current->size)
@@ -233,7 +233,7 @@ class BPlusTree
         }
         else
         {
-            cout << "scenario 2" << endl;
+            //cout << "scenario 2" << endl;
             // Scenario 2
             //  If there is not enough space, we will have to split the keys into two nodes
             Node *newInternalNode = new Node; // Create another node
@@ -791,7 +791,7 @@ public:
         }
     }
 
-    void displayTree(Node *cursor,bool isRoot)
+    void displayTree(Node *cursor, bool isRoot)
     {
         if (cursor != NULL)
         {
