@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <queue>
 using namespace std;
 
 const int MAX_KEYS_NODE = 4;
@@ -794,22 +795,45 @@ public:
     void displayTree(Node *cursor, bool isRoot)
     {
         if (cursor != NULL)
+    {
+        queue<Node *> currentLevel;
+        queue<Node *> nextLevel;
+        
+        currentLevel.push(cursor);
+        int level = 0;
+
+        while (!currentLevel.empty())
         {
+            cursor = currentLevel.front();
+            currentLevel.pop();
+
             for (int i = 0; i < cursor->size; i++)
-            {
-                cout << cursor->key[i].key_value << " "; 
-            }
-            if (isRoot)
-                cout << "\n";
-            if (cursor->isLeaf != true)
+                cout << cursor->key[i].key_value << " ";
+
+            if(level==0)
+                cout << "(Root) ";
+            else
+                if (cursor->isLeaf)
+                    cout << "(Leaf) ";
+                else
+                    cout << "(Internal) ";
+
+            if (!cursor->isLeaf)
             {
                 for (int i = 0; i < cursor->size + 1; i++)
                 {
-                    displayTree(cursor->ptr[i],false);
+                    nextLevel.push(cursor->ptr[i]);
                 }
+            }
+
+            if (currentLevel.empty())
+            {
+                swap(currentLevel, nextLevel);
                 cout << "\n";
+                level++;
             }
         }
+    }
     }
 
     void getKey(Node *cursor)
