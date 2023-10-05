@@ -115,6 +115,7 @@ DatabaseStorage::DatabaseStorage(uint storageCapacity, uint blockSize){
 
 DatabaseStorage::~DatabaseStorage(){
     delete[] this->storagePointer;
+    delete[] this->curBlockPointer;
     storagePointer = nullptr;
 }
 
