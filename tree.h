@@ -276,6 +276,11 @@ class BPlusTree
             newInternalNode->size = MAX_KEYS_NODE - ((MAX_KEYS_NODE + 1) / 2);
 
             int j = 0;
+            for (i = 0; i < current->size; i++)
+                current->key[i] = tempKey[i];
+
+            for (i = 0; i < current->size + 1; i++)
+                current->ptr[i] = tempPtr[i];
 
             for (i = 0, j = current->size + 1; i < newInternalNode->size; i++, j++)
                 newInternalNode->key[i] = tempKey[j];
@@ -286,7 +291,7 @@ class BPlusTree
             if (current == root)
             {
                 Node *newRootNode = new Node;
-                newRootNode->key[0] = current->key[current->size];
+                newRootNode->key[0] = tempKey[current->size];
                 newRootNode->ptr[0] = current;
                 newRootNode->ptr[1] = newInternalNode;
                 newRootNode->isLeaf = false;
@@ -295,7 +300,7 @@ class BPlusTree
             }
             else
             {
-                insertInternal(current->key[current->size], findParent(root, current), newInternalNode);
+                insertInternal(tempKey[current->size], findParent(root, current), newInternalNode);
             }
         }
     }
