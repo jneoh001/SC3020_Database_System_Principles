@@ -927,6 +927,7 @@ public:
                 i++;
             }
             cursor = cursor->ptr[MAX_KEYS_NODE];
+            i = 0;
         }
         while(i<cursor->size && cursor->key[i].key_value <= keymax){
             results.push_back(cursor->key[i]);
