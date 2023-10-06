@@ -3,11 +3,31 @@
 #include <cstring>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 #include "DataLoader.h"
 #include "tree.h"
 
 using namespace std;
 
+int countDataBlocks(vector<Record*>records, vector<tuple<string*, uint>> database){
+    vector<string*> addresses;
+    int count = 0;
+    for(int i=0;i<records.size();i++){
+        for (int j=0;j<database.size();j++){
+            tuple<string*,uint>individualRecord = database[j];
+            string* blockAddress = get<0>(individualRecord);
+            uint offset = get<1>(individualRecord);
+            Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
+            if(retrievedRecord == records[i]){
+                if(find(addresses.begin(), addresses.end(), blockAddress) == addresses.end()){
+                    addresses.push_back(blockAddress);
+                    count ++;
+                }
+            }
+        }
+    }
+    return count;
+}
 
 int main(){
     cout << "-------------Reading Database file-------------"<<"\n"<<"\n";
@@ -51,9 +71,8 @@ int main(){
         string* blockAddress = get<0>(AddressOfRecord);
         uint offset = get<1>(AddressOfRecord);
         Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
-        //keys[i].key_value = retrievedRecord->fg_pct_home;
         bptree.insert(retrievedRecord);
-        cout << "Inserted "<< retrievedRecord->fg_pct_home<<endl;
+        //cout << "Inserted "<< retrievedRecord->fg_pct_home<<endl;
     }
     // Create dummy data
     // for (int i = 0; i < 20; i++)
@@ -66,7 +85,24 @@ int main(){
     cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
 
     //Display B+ tree (DEBUGGING)
-    bptree.remove(keys[8]);
+    cout << "-------------Experiment 3-----------------"<<"\n";
+    Node * node = bptree.search(0.5);
+    if(node != nullptr){
+        keys_struct key = node->getSpecificKey(0.5);
+        vector<Record*> records = key.secondary_key;
+        
+        float total = 0.0;
+        for(int i=0;i<records.size();i++){
+            total += records[i]->fg3_pct_home;
+        }
+        float average = total/records.size();
+        int dataBlocksAccessed = countDataBlocks(records, database);
+        cout << "Total fg3_pct_home: " << total << "\n";
+        cout << "All records with values 0.5 for fg_pct_home: " << records.size() << "\n";
+        cout << "Average fg3_pct_home: " << average << "\n";
+        cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
+    }
+    //bptree.remove(keys[8]);
     bptree.displayTree(bptree.getRoot(),true);
     return 0;
 }
