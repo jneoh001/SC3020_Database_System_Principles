@@ -851,174 +851,67 @@ public:
         }
     }
 
-    // void removeRangeInternal(float keymin, float keymax, Node *cursor)
-    // {
-    //     // nothing to remove
-    //     if (root == NULL)
-    //     {
-    //         return;
-    //     }
-    //     // top down destruction, start from root
-    //     int leftSibling, rightSibling;
-    //     //flag for leftshift required
-    //     bool leftShift = false;
-    //     //counter for number of nodes to shift
-    //     int count = 0;
+    vector<keys_struct> searchRange(float keymin, float keymax){
+        Node *leftBound = root, *rightBound = root;
+        vector<keys_struct> results;
+        while(rightBound->isLeaf == false){
+            for (int i = 0; i < rightBound->size; i++)
+            {
+                if (keymax < rightBound->key[i].key_value)
+                {
+                    rightBound = rightBound->ptr[i];
+                    break;
+                }
+                if (i == rightBound->size - 1)
+                {
+                    rightBound = rightBound->ptr[i + 1];
+                    break;
+                }
+            }
+        }
+        while(leftBound->isLeaf == false){
+            //set parent of leftbound before going into next node
+            //reversed search, start from right
+            for(int i = leftBound->size-1; i>=0 ;i--){
+                if(keymin > leftBound->key[i].key_value){
+                    leftBound = leftBound->ptr[i+1];
+                    break;
+                }
+                if(i == 0){
+                    leftBound = leftBound->ptr[i];
+                    break;
+                }
+            }
+        }
+        Node* cursor = leftBound;
+        int i = 0;
+        while(i<cursor->size && cursor->key[i].key_value < keymin) i++;
+        while(cursor != rightBound){
+            //theoretically keymax should never trigger
+            while(i<cursor->size && keymin<=cursor->key[i].key_value){
+                results.push_back(cursor->key[i]);
+                i++;
+            }
+            cursor = cursor->ptr[MAX_KEYS_NODE];
+        }
+        while(i<cursor->size && cursor->key[i].key_value <= keymax){
+            results.push_back(cursor->key[i]);
+            i++;
+        }
+        return results;
+    }
 
-    //     // search for all keys in node
-    //     int i = 0;
-    //     while(i<cursor->size && (keymin > cursor->key[i].key_value)){
-    //         //find starting i to be greater or equal to keymin
-    //         i++;
-    //     }
-    //     //save starting index
-    //     int start = i;
-    //     if(cursor->key[i].key_value > keymin){
-    //         //if greater, go left, otherwise it may be exactly equal or less
-    //         if(i==0){
-    //             //if first value is already greater than min, deletion will result in leftshift
-    //             leftShift = true;
-    //             //why not consider max? if less than max, then deletion, if more than, no deletion in entire node
-    //         }
-    //         if(cursor->ptr[i]->isLeaf == false){
-    //             removeRangeInternal(keymin, keymax, cursor->ptr[i]);
-    //         }
-    //         else{
-    //             //removerangeleaf
-    //         }
-    //     }
-    //     //from here, only check right ptr as all leftpointers are checked
-    //     //check all nodes with ptr <= keymax
-    //     while(i<cursor->size && cursor->key[i].key_value<=keymax){
-    //         leftSibling = i-1;
-    //         rightSibling = i+1;
-    //         if(rightSibling < cursor->size && cursor->key[rightSibling].key_value<=keymax){
-    //             //nuke i+1
-    //             count++;
-    //         }
-    //         else{
-    //             if(cursor->ptr[rightSibling]->isLeaf == false){
-    //                 removeRangeInternal(keymin, keymax, cursor->ptr[rightSibling]);
-    //             }
-    //             else{
-    //                 //removerangeleaf
-    //             }
-    //         }
-    //         i++;
-    //     }
-    //     //if it reaches lastnode, no rightkey
-    //     if(i==cursor->size){
-    //         if(cursor->ptr[i+1]->isLeaf == false){
-    //             removeRangeInternal(keymin, keymax, cursor->ptr[i+1]);
-    //         }
-    //         else{
-    //             //removerangeleaf
-    //         }
-    //     }
-    //     //below not done
-    //     //if leftshift, shift all keys and ptr to the right of start key to the left by the count
-    //     //leftshift bool unnecessary, leftshift if i<cursorsize, if i == cursorsize 
-
-
-    //     cursor->size--;
-    //     // move all keys and ptr to the right of found key to the left
-    //     // max number of keys is maxkeysnode-1, no illegal access should occur
-    //     for (int j = i; j < cursor->size; j++){
-    //         cursor->key[j] = cursor->key[j + 1];
-    //         cursor->ptr[j] = cursor->ptr[j + 1];
-    //     }
-    //     // remove last key and ptr (probably unnecessary but just in case)
-    //     cursor->key[cursor->size].reset();
-    //     cursor->ptr[cursor->size] = nullptr;
-
-    //     if (cursor == root)
-    //     {
-    //         // if cursor is at root, no more work to do
-    //         return;
-    //     }
-    //     if (cursor->size >= (MAX_KEYS_NODE + 1) / 2)
-    //     {
-    //         // minimum size for leaf node is max+1/2 floor
-    //         return;
-    //     }
-    //     // check for borrowing first
-    //     // check for leftsibling and rightsibling now
-    //     if (leftSibling > -1)
-    //     {
-    //         Node *leftNode = parent->ptr[leftSibling];
-    //         // possible to transfer if size > minimum
-    //         if (leftNode->size > (MAX_KEYS_NODE + 1) / 2)
-    //         {
-    //             // move all keys and pointers right to make space
-    //             for (int i = cursor->size; i > 0; i--)
-    //             {
-    //                 cursor->key[i] = cursor->key[i - 1];
-    //                 cursor->ptr[i] = cursor->ptr[i - 1];
-    //             }
-    //             // update sizes before transfer
-    //             cursor->size++;
-    //             leftNode->size--;
-    //             // transfer
-    //             cursor->key[0] = leftNode->key[leftNode->size];
-    //             cursor->ptr[0] = leftNode->ptr[leftNode->size];
-    //             // clean leftnode
-    //             leftNode->key[leftNode->size].reset();
-    //             leftNode->ptr[leftNode->size] = nullptr;
-    //             // update parent (key will always reflect rightpointer minimum value)
-    //             parent->key[leftSibling] = cursor->key[0];
-    //             return;
-    //         }
-    //     }
-    //     if (rightSibling <= parent->size)
-    //     {
-    //         Node *rightNode = parent->ptr[rightSibling];
-    //         // possible to transfer if size > min
-    //         if (rightNode->size > (MAX_KEYS_NODE + 1) / 2)
-    //         {
-    //             // transfer first before size update
-    //             cursor->key[cursor->size] = rightNode->key[0];
-    //             cursor->ptr[cursor->size] = rightNode->ptr[0];
-    //             // update size
-    //             cursor->size++;
-    //             rightNode->size--;
-    //             // shift all keys and ptrs left to fill space in rightnode
-    //             for (int i = 0; i < rightNode->size; i++)
-    //             {
-    //                 rightNode->key[i] = rightNode->key[i + 1];
-    //                 rightNode->ptr[i] = rightNode->ptr[i + 1];
-    //             }
-    //             // clean rightnode
-    //             rightNode->key[rightNode->size].reset();
-    //             rightNode->ptr[rightNode->size] = nullptr;
-    //             // update parent
-    //             parent->key[rightSibling - 1] = rightNode->key[0];
-    //             return;
-    //         }
-    //     }
-    //     // if cannot borrow, must merge
-    //     if (leftSibling > -1)
-    //     {
-    //         Node *leftNode = parent->ptr[leftSibling];
-    //         // transfer all keys and pointers to leftnode, maintain pointer to new next leaf node at max
-    //         merge(leftNode, cursor);
-    //         // call removeinternal
-    //         removeInternal(parent->key[leftSibling], parent, cursor);
-    //         // cursor->~Node();
-    //     }
-    //     else
-    //     {
-    //         // if left sibling does not exist, right sibling must exist since cursor is not root
-    //         Node *rightNode = parent->ptr[rightSibling];
-    //         // transfer keys and ptrs to cursor, maintain pointer to next leaf
-    //         for (int i = cursor->size, j = 0; j < rightNode->size; i++, j++)
-    //         {
-    //             // same as above but cursor as leftnode
-    //             merge(cursor, rightNode);
-    //             removeInternal(parent->key[rightSibling - 1], parent, rightNode);
-    //             // rightNode->~Node();
-    //         }
-    //     }
-    // }
+    void removeRange(float keymin, float keymax)
+    {
+        if(root == NULL) return;
+        vector<keys_struct> hitList;
+        hitList = searchRange(keymin, keymax);
+        while (!hitList.empty())
+        {
+            remove(hitList.back());
+            hitList.pop_back();
+        }
+    }
 
     void displayTree(Node *cursor, bool isRoot)
     {
