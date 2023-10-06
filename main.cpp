@@ -45,7 +45,7 @@ int main(){
     keys_struct *keys = new keys_struct[database.size()];
 
     // Insert into B+ tree
-    for (unsigned int i=0;i<8;i++){
+    for (unsigned int i=0;i<database.size();i++){
         tuple<string*,uint>AddressOfRecord = database[i];
         // Reverse Engineer to retrieve the record and insert into B+ plus tree
         string* blockAddress = get<0>(AddressOfRecord);

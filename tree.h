@@ -492,8 +492,8 @@ public:
             {
                 if (cursor->key[i].key_value == x)
                 {
-                    // cout << "Number of Data Blocks: "<< cursor->key[i].secondary_key.size(); // print number of data blocks
-                    // cout << "\n";
+                    cout << "Number of Data Blocks: "<< cursor->key[i].secondary_key.size(); // print number of data blocks
+                    cout << "\n";
                     /*for (int j = 0; j < cursor->key[i].secondary_key.size(); ++j) {
                         printf("Data Block: ");
                         printf("%p", (uchar *) cursor->key[i].secondary_key[j]); //print whatever key stored in duplicate_keys (unsigned character)
