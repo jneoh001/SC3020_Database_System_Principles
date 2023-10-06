@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int MAX_KEYS_NODE = 4;
+const int MAX_KEYS_NODE = 33;
 
 struct keys_struct
 {
@@ -547,6 +547,10 @@ public:
 
         return nullptr;
     }
+
+    // vector<keys_struct>searchRange(float start,float end){
+    //     return ;
+    // }
 
     void insert(Record* record)
     {

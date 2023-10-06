@@ -4,6 +4,7 @@
 #include <tuple>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 #include "DataLoader.h"
 #include "tree.h"
 
@@ -38,7 +39,7 @@ int main(){
     BPlusTree bptree;
 
     for(int i=0;i<loader->getRecordSize();i++){
-        int recordSize = loader->getRecordOnIndex(i).game_date.size() + (sizeof(loader->getRecordOnIndex(i)) - sizeof(loader->getRecordOnIndex(i).game_date));
+        int recordSize = sizeof(loader->getRecordOnIndex(i));
         tuple<string*,uint> recordAddress = storage->writeRecord(recordSize);
 
         // create copy of record
@@ -55,7 +56,7 @@ int main(){
     cout << "-------------Done Reading Database file-------------"<<"\n"<<"\n";
 
     cout << "-------------Experiment 1-------------"<<"\n"<<"\n";
-    int sizeOfRecord = loader->getRecordOnIndex(0).game_date.size() + (sizeof(loader->getRecordOnIndex(0)) - sizeof(loader->getRecordOnIndex(0).game_date));
+    int sizeOfRecord = sizeof(loader->getRecordOnIndex(0));
     cout << "-------------Information on Database-------------"<<"\n"<<"\n";
     cout << "Size of storage: " << storage->getSizeOfStorage() << "\n";
     cout << "Size of record: " << sizeOfRecord << "\n";
@@ -63,48 +64,52 @@ int main(){
     cout << "Number of records per block: " << storage->getBlockSize() / sizeOfRecord << "\n";
     cout << "Number of blocks used for storing data: " << storage->getBlocksOccupied() << "\n";
 
-    // cout << "-------------Indexing records onto B+ tree-------------"<<"\n"<<"\n";
-    // keys_struct *keys = new keys_struct[database.size()];
+    cout << "-------------Indexing records onto B+ tree-------------"<<"\n"<<"\n";
+    keys_struct *keys = new keys_struct[database.size()];
 
-    // // Insert into B+ tree
-    // for (unsigned int i=0;i<database.size();i++){
-    //     tuple<string*,uint>AddressOfRecord = database[i];
-    //     // Reverse Engineer to retrieve the record and insert into B+ plus tree
-    //     string* blockAddress = get<0>(AddressOfRecord);
-    //     uint offset = get<1>(AddressOfRecord);
-    //     Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
-    //     bptree.insert(retrievedRecord);
-    //     //cout << "Inserted "<< retrievedRecord->fg_pct_home<<endl;
+    // Insert into B+ tree
+    for (unsigned int i=0;i<database.size();i++){
+        tuple<string*,uint>AddressOfRecord = database[i];
+        // Reverse Engineer to retrieve the record and insert into B+ plus tree
+        string* blockAddress = get<0>(AddressOfRecord);
+        uint offset = get<1>(AddressOfRecord);
+        Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
+        bptree.insert(retrievedRecord);
+        //cout << "Inserted "<< retrievedRecord->fg_pct_home<<endl;
+    }
+    // Create dummy data
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     keys[i].key_value = i;
+    //     bptree.insert(keys[i]);
     // }
-    // // Create dummy data
-    // // for (int i = 0; i < 20; i++)
-    // // {
-    // //     keys[i].key_value = i;
-    // //     bptree.insert(keys[i]);
-    // // }
 
 
-    // cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
+    cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
 
     // //Display B+ tree (DEBUGGING)
-    // cout << "-------------Experiment 3-----------------"<<"\n";
-    // Node * node = bptree.search(0.5);
-    // if(node != nullptr){
-    //     keys_struct key = node->getSpecificKey(0.5);
-    //     vector<Record*> records = *(key.secondary_key);
+    cout << "-------------Experiment 3-----------------"<<"\n";
+    auto start = chrono::high_resolution_clock::now();
+    Node * node = bptree.search(0.5);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+    cout << "Time taken to search for key 0.5: " << duration.count() << " microseconds" << "\n";
+    if(node != nullptr){
+        keys_struct key = node->getSpecificKey(0.5);
+        vector<Record*> records = *(key.secondary_key);
         
-    //     float total = 0.0;
-    //     for(int i=0;i<records.size();i++){
-    //         total += records[i]->fg3_pct_home;
-    //     }
-    //     float average = total/records.size();
-    //     int dataBlocksAccessed = countDataBlocks(records, database);
-    //     cout << "Total fg3_pct_home: " << total << "\n";
-    //     cout << "All records with values 0.5 for fg_pct_home: " << records.size() << "\n";
-    //     cout << "Average fg3_pct_home: " << average << "\n";
-    //     cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
-    // }
-    // //bptree.remove(keys[8]);
+        float total = 0.0;
+        for(int i=0;i<records.size();i++){
+            total += records[i]->fg3_pct_home;
+        }
+        float average = total/records.size();
+        int dataBlocksAccessed = countDataBlocks(records, database);
+        cout << "Total fg3_pct_home: " << total << "\n";
+        cout << "All records with values 0.5 for fg_pct_home: " << records.size() << "\n";
+        cout << "Average fg3_pct_home: " << average << "\n";
+        cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
+    }
+    //bptree.remove(keys[8]);
     // bptree.displayTree(bptree.getRoot(),true);
-    // return 0;
+    return 0;
 }
