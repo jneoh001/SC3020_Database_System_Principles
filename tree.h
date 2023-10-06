@@ -265,11 +265,12 @@ class BPlusTree
             while (nodeData.key_value > tempKey[i].key_value && i < MAX_KEYS_NODE)
                 i++;
 
-            for (int j = MAX_KEYS_NODE + 1; j > i; j--)
+            for (int j = MAX_KEYS_NODE; j > i; j--)
                 tempKey[j] = tempKey[j - 1];
-            for (int j = MAX_KEYS_NODE + 2; j > i; j--)
+            for (int j = MAX_KEYS_NODE + 1; j > i; j--)
                 tempPtr[j] = tempPtr[j - 1];
 
+            tempKey[i] = nodeData;
             tempPtr[i + 1] = child;
             newInternalNode->isLeaf = false;
             current->size = (MAX_KEYS_NODE + 1) / 2;
