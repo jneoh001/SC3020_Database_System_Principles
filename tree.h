@@ -15,11 +15,12 @@ struct keys_struct
 {
     //float key_value;
     float key_value = 0.0;
-    vector<Record *> secondary_key; // duplicate handler
+    vector<Record *> *secondary_key = new vector<Record *>(); // create new vector object
+
     void reset()
     {
         key_value = NULL;
-        secondary_key.clear();
+        // secondary_key.clear();
     }
 };
 
@@ -530,7 +531,7 @@ public:
             {
                 if (cursor->key[i].key_value == x)
                 {
-                    cout << "Number of duplicates: "<< cursor->key[i].secondary_key.size(); // print number of data blocks
+                    cout << "Number of duplicates: "<< cursor->key[i].secondary_key->size(); // print number of data blocks
                     cout << "\n";
                     /*for (int j = 0; j < cursor->key[i].secondary_key.size(); ++j) {
                         printf("Data Block: ");
@@ -551,7 +552,7 @@ public:
     {
         keys_struct entry;
         entry.key_value = record->fg_pct_home;
-        entry.secondary_key.push_back(record);
+        entry.secondary_key->push_back(record);
         // Tree is empty
         if (root == NULL)
         {
@@ -578,8 +579,8 @@ public:
                     if (searcher->key[i].key_value == entry.key_value)
                     {
                         // push entire secondary key without checking like FAQ 9
-                        if (entry.secondary_key.size() > 0)
-                            searcher->key[i].secondary_key.push_back(record);
+                        if (entry.secondary_key->size() > 0)
+                            searcher->key[i].secondary_key->push_back(record);
                         break;
                     }
                 }
