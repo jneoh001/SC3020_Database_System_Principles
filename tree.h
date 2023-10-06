@@ -139,7 +139,6 @@ class BPlusTree
             else
             {
                 // recur
-                insertKeyIntoInternalNode(entry, findParent(root, cursor), newInternal);
             }
             nodeCleaner(cursor);
         }
@@ -688,7 +687,7 @@ public:
                 {
                     // Scenario 2: Cursor is not a root node
                     // Insert new key in parent node
-                    insertKeyIntoInternalNode(newLeaf->key[0], parent, newLeaf);
+                    insertInternal(newLeaf->key[0], parent, newLeaf);
                 }
             }
         }
