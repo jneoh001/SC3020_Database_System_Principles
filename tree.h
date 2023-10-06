@@ -851,51 +851,61 @@ public:
         bool leftShift = false;
         //counter for number of nodes to shift
         int count = 0;
-        // search for all keys in node
-        int i;
-        for (i = 0; i < cursor->size; i++)
-        {
-            if (keymax >= cursor->key[i].key_value >= keymin)
-            {
-                leftSibling = i - 1;
-                rightSibling = i + 1;
-                // call removerange on left side unless key <= min
-                if (cursor->key[i].key_value > keymin){
-                    if(i==0){
-                        leftShift = true;
-                    }
-                    if (cursor->ptr[i]->isLeaf == false){
-                        removeRangeInternal(keymin, keymax, cursor->ptr[i]);
-                    }
-                    else{
-                        // removerangeleaf
-                    }
-                }
 
-                if (rightSibling < cursor->size){
-                    if (cursor->key[rightSibling].key_value <= keymax){
-                        // nuke directly
-                    }
-                    else{
-                        if (cursor->ptr[rightSibling]->isLeaf == false){
-                            removeRangeInternal(keymin, keymax, cursor->ptr[rightSibling]);
-                        }
-                        else{
-                            // removerangeleaf
-                        }
-                    }
-                }
+        // search for all keys in node
+        int i = 0;
+        while(i<cursor->size && (keymin > cursor->key[i].key_value)){
+            //find starting i to be greater or equal to keymin
+            i++;
+        }
+        //save starting index
+        int start = i;
+        if(cursor->key[i].key_value > keymin){
+            //if greater, go left, otherwise it may be exactly equal or less
+            if(i==0){
+                //if first value is already greater than min, deletion will result in leftshift
+                leftShift = true;
+                //why not consider max? if less than max, then deletion, if more than, no deletion in entire node
             }
-            if (i == cursor->size - 1)
-            {
-                leftSibling = i;
-                rightSibling = i + 2;
-                // and here
-                break;
+            if(cursor->ptr[i]->isLeaf == false){
+                removeRangeInternal(keymin, keymax, cursor->ptr[i]);
+            }
+            else{
+                //removerangeleaf
             }
         }
+        //from here, only check right ptr as all leftpointers are checked
+        //check all nodes with ptr <= keymax
+        while(i<cursor->size && cursor->key[i].key_value<=keymax){
+            leftSibling = i-1;
+            rightSibling = i+1;
+            if(rightSibling < cursor->size && cursor->key[rightSibling].key_value<=keymax){
+                //nuke i+1
+                count++;
+            }
+            else{
+                if(cursor->ptr[rightSibling]->isLeaf == false){
+                    removeRangeInternal(keymin, keymax, cursor->ptr[rightSibling]);
+                }
+                else{
+                    //removerangeleaf
+                }
+            }
+            i++;
+        }
+        //if it reaches lastnode, no rightkey
+        if(i==cursor->size){
+            if(cursor->ptr[i+1]->isLeaf == false){
+                removeRangeInternal(keymin, keymax, cursor->ptr[i+1]);
+            }
+            else{
+                //removerangeleaf
+            }
+        }
+        //below not done
+        //if leftshift, shift all keys and ptr to the right of start key to the left by the count
+        //leftshift bool unnecessary, leftshift if i<cursorsize, if i == cursorsize 
 
-        
 
         cursor->size--;
         // move all keys and ptr to the right of found key to the left
