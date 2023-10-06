@@ -45,22 +45,22 @@ int main(){
     keys_struct *keys = new keys_struct[database.size()];
 
     // Insert into B+ tree
-    // for (unsigned int i=0;i<database.size();i++){
-    //     tuple<string*,uint>AddressOfRecord = database[i];
-    //     // Reverse Engineer to retrieve the record and insert into B+ plus tree
-    //     string* blockAddress = get<0>(AddressOfRecord);
-    //     uint offset = get<1>(AddressOfRecord);
-    //     Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
-    //     keys[i].key_value = retrievedRecord->fg_pct_home;
-    //     bptree.insert(keys[i]);
-    //     cout << "Inserted "<< i<<endl;
-    // }
-    // Create dummy data
-    for (int i = 0; i < 20; i++)
-    {
-        keys[i].key_value = i;
+    for (unsigned int i=0;i<database.size();i++){
+        tuple<string*,uint>AddressOfRecord = database[i];
+        // Reverse Engineer to retrieve the record and insert into B+ plus tree
+        string* blockAddress = get<0>(AddressOfRecord);
+        uint offset = get<1>(AddressOfRecord);
+        Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
+        keys[i].key_value = retrievedRecord->fg_pct_home;
         bptree.insert(keys[i]);
+        cout << "Inserted "<< keys[i].key_value<<endl;
     }
+    // Create dummy data
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     keys[i].key_value = i;
+    //     bptree.insert(keys[i]);
+    // }
 
 
     cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
