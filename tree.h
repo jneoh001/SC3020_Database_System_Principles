@@ -4,14 +4,18 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <iostream>
+#include <iomanip>
+
 using namespace std;
 
 const int MAX_KEYS_NODE = 4;
 
 struct keys_struct
 {
-    float key_value;
-    vector<void *> secondary_key; // duplicate handler
+    //float key_value;
+    float key_value = 0.0;
+    vector<Record *> secondary_key; // duplicate handler
     void reset()
     {
         key_value = NULL;
@@ -488,8 +492,8 @@ public:
             {
                 if (cursor->key[i].key_value == x)
                 {
-                    cout << "Number of Data Blocks: "<< cursor->key[i].secondary_key.size(); // print number of data blocks
-                    cout << "\n";
+                    // cout << "Number of Data Blocks: "<< cursor->key[i].secondary_key.size(); // print number of data blocks
+                    // cout << "\n";
                     /*for (int j = 0; j < cursor->key[i].secondary_key.size(); ++j) {
                         printf("Data Block: ");
                         printf("%p", (uchar *) cursor->key[i].secondary_key[j]); //print whatever key stored in duplicate_keys (unsigned character)
@@ -505,8 +509,10 @@ public:
         return nullptr;
     }
 
-    void insert(keys_struct entry)
+    void insert(Record* record)
     {
+        keys_struct entry;
+        entry.key_value = record->fg_pct_home;
         // Tree is empty
         if (root == NULL)
         {
@@ -526,7 +532,7 @@ public:
             // Check if key in tree
             Node *searcher;
             searcher = search(entry.key_value);
-            if (searcher != nullptr && searcher != root)
+            if (searcher != nullptr)
             {
                 for (int i = 0; i < searcher->size; i++)
                 {
@@ -534,7 +540,7 @@ public:
                     {
                         // push entire secondary key without checking like FAQ 9
                         if (entry.secondary_key.size() > 0)
-                            searcher->key[i].secondary_key.push_back(entry.secondary_key[0]);
+                            searcher->key[i].secondary_key.push_back(record);
                         break;
                     }
                 }
@@ -598,7 +604,7 @@ public:
                 // Search for position to insert entry, maximum is at MAX+1
                 while (virtualNode[i].key_value < entry.key_value && i < MAX_KEYS_NODE)
                     i++;
-                for (int j = MAX_KEYS_NODE + 1; j > i; j--)
+                for (int j = MAX_KEYS_NODE; j > i; j--)
                 {
                     virtualNode[j] = virtualNode[j - 1];
                 }
