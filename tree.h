@@ -367,10 +367,11 @@ class BPlusTree
                 break;
             }
         }
-        for (int i = j; i < cursor->size; i++)
+        for (int i = j; i < cursor->size-1; i++)
         { // Continue from wherever j stopped; move keys forward
             cursor->key[i] = cursor->key[i + 1];
         }
+        cursor->key[j].reset();
         // Delete the empty NODE
         for (j = 0; j < cursor->size; j++)
         {
