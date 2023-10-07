@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int MAX_KEYS_NODE = 33;
+const int MAX_KEYS_NODE = 4;
 
 struct keys_struct
 {
@@ -20,7 +20,7 @@ struct keys_struct
     void reset()
     {
         key_value = NULL;
-        // secondary_key.clear();
+        secondary_key->clear();
     }
 };
 
@@ -372,14 +372,14 @@ class BPlusTree
             cursor->key[i] = cursor->key[i + 1];
         }
         // Delete the empty NODE
-        for (j = 0; j < cursor->size + 1; j++)
+        for (j = 0; j < cursor->size; j++)
         {
             if (cursor->ptr[j] == child)
             {
                 break;
             }
         }
-        for (int i = j; i < cursor->size + 1; i++)
+        for (int i = j; i < cursor->size; i++)
         {
             cursor->ptr[i] = cursor->ptr[i + 1]; // Pointer moved forward
         }
@@ -879,13 +879,8 @@ public:
             // if left sibling does not exist, right sibling must exist since cursor is not root
             Node *rightNode = parent->ptr[rightSibling];
             // transfer keys and ptrs to cursor, maintain pointer to next leaf
-            for (int i = cursor->size, j = 0; j < rightNode->size; i++, j++)
-            {
-                // same as above but cursor as leftnode
-                merge(cursor, rightNode);
-                removeInternal(parent->key[rightSibling - 1], parent, rightNode);
-                // rightNode->~Node();
-            }
+            merge(cursor, rightNode);
+            removeInternal(parent->key[rightSibling - 1], parent, rightNode);
         }
     }
 
