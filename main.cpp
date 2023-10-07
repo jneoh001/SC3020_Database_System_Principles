@@ -31,6 +31,8 @@ int countDataBlocks(vector<Record*>records, vector<tuple<string*, uint>> databas
 }
 
 int main(){
+    cout << "=====================================================" << endl;
+    cout << "-------------Experiment 1-------------"<<"\n";
     cout << "-------------Reading Database file-------------"<<"\n"<<"\n";
 
     DatabaseStorage *storage = new DatabaseStorage(100000000,400);
@@ -54,8 +56,6 @@ int main(){
     }
 
     cout << "-------------Done Reading Database file-------------"<<"\n"<<"\n";
-
-    cout << "-------------Experiment 1-------------"<<"\n"<<"\n";
     int sizeOfRecord = sizeof(loader->getRecordOnIndex(0));
     cout << "-------------Information on Database-------------"<<"\n"<<"\n";
     cout << "Size of storage: " << storage->getSizeOfStorage() << "\n";
@@ -63,8 +63,10 @@ int main(){
     cout << "Number of records: " << loader->getRecordSize() << "\n";
     cout << "Number of records per block: " << storage->getBlockSize() / sizeOfRecord << "\n";
     cout << "Number of blocks used for storing data: " << storage->getBlocksOccupied() << "\n";
+    cout << "=====================================================" <<"\n"<<"\n";
 
-    cout << "-------------Indexing records onto B+ tree-------------"<<"\n"<<"\n";
+    cout << "-------------Experiment 2-------------"<<"\n";
+    cout << "-------------Indexing records onto B+ tree-------------"<<"\n";
     keys_struct *keys = new keys_struct[database.size()];
 
     // Insert into B+ tree
@@ -75,19 +77,10 @@ int main(){
         uint offset = get<1>(AddressOfRecord);
         Record* retrievedRecord = reinterpret_cast<Record*>(blockAddress + offset);
         bptree.insert(retrievedRecord);
-        //cout << "Inserted "<< retrievedRecord->fg_pct_home<<endl;
     }
-    // Create dummy data
-    // for (int i = 0; i < 20; i++)
-    // {
-    //     keys[i].key_value = i;
-    //     bptree.insert(keys[i]);
-    // }
-
 
     cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
-
-    // //Display B+ tree (DEBUGGING)
+    cout << "=====================================================" << endl;
     cout << "-------------Experiment 3-----------------"<<"\n";
     auto start = chrono::high_resolution_clock::now();
     Node * node = bptree.search(0.5);
@@ -111,5 +104,17 @@ int main(){
     }
     //bptree.remove(keys[8]);
     // bptree.displayTree(bptree.getRoot(),true);
+
+    cout << "=====================================================" << endl;
+    cout << "-------------Experiment 4-----------------"<<"\n";
+    vector<keys_struct> keysToBeDeleted;
+    keysToBeDeleted = bptree.searchRange(0.6,1.0);
+    int count = 0;
+    for(int i=0;i<keysToBeDeleted.size();i++){
+        bptree.remove(keysToBeDeleted[i]);
+        count ++;
+    }
+    cout << "=====================================================" << endl;
+    bptree.displayTree(bptree.getRoot(),true);
     return 0;
 }
