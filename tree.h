@@ -384,6 +384,8 @@ class BPlusTree
         {
             cursor->ptr[i] = cursor->ptr[i + 1]; // Pointer moved forward
         }
+        cursor->ptr[j] = nullptr;
+        //child->~Node();
         cursor->size--;
         if (cursor->size >= (MAX_KEYS_NODE + 1) / 2 - 1)
         { // Check for too few keys
@@ -886,8 +888,12 @@ public:
     }
 
     vector<keys_struct> searchRange(float keymin, float keymax){
+        if(root==NULL)return;
         Node *leftBound = root, *rightBound = root;
         vector<keys_struct> results;
+        vector<Node*> visited;
+
+        int count = 1;
         while(rightBound->isLeaf == false){
             for (int i = 0; i < rightBound->size; i++)
             {
@@ -902,6 +908,8 @@ public:
                     break;
                 }
             }
+            visited.push_back(rightBound);
+            count++;
         }
         while(leftBound->isLeaf == false){
             //set parent of leftbound before going into next node
@@ -915,6 +923,12 @@ public:
                     leftBound = leftBound->ptr[i];
                     break;
                 }
+                for(int i =0; i<visited.size();i++){
+                    if(leftBound == visited[i]){
+                        continue;
+                    }
+                }
+                count++;
             }
         }
         Node* cursor = leftBound;
@@ -927,12 +941,16 @@ public:
                 i++;
             }
             cursor = cursor->ptr[MAX_KEYS_NODE];
+            if(cursor!=rightBound){
+                count++;
+            }
             i = 0;
         }
         while(i<cursor->size && cursor->key[i].key_value <= keymax){
             results.push_back(cursor->key[i]);
             i++;
         }
+        cout << "Number of index nodes accessed: " << count << endl;
         return results;
     }
 

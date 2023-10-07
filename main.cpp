@@ -70,7 +70,7 @@ int main(){
     keys_struct *keys = new keys_struct[database.size()];
 
     // Insert into B+ tree
-    for (unsigned int i=0;i<1000;i++){
+    for (unsigned int i=0;i<database.size();i++){
         tuple<string*,uint>AddressOfRecord = database[i];
         // Reverse Engineer to retrieve the record and insert into B+ plus tree
         string* blockAddress = get<0>(AddressOfRecord);
@@ -90,7 +90,7 @@ int main(){
     if(node != nullptr){
         keys_struct key = node->getSpecificKey(0.5);
         vector<Record*> records = *(key.secondary_key);
-        
+
         float total = 0.0;
         for(int i=0;i<records.size();i++){
             total += records[i]->fg3_pct_home;
@@ -102,13 +102,37 @@ int main(){
         cout << "Average fg3_pct_home: " << average << "\n";
         cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
     }
-    bptree.displayTree(bptree.getRoot(),true);
 
-    cout << "=====================================================" << endl;
+    cout << "\n\n=====================================================" << endl;
     cout << "-------------Experiment 4-----------------"<<"\n";
+    auto start2 = chrono::high_resolution_clock::now();
+    vector<keys_struct> searchrange = bptree.searchRange(0.6, 1.00);
+    auto stop2 = chrono::high_resolution_clock::now();
+    auto duration2 = chrono::duration_cast<chrono::microseconds>(stop2 - start2);
+    cout << "Time taken to search for key range 0.6 to 1: " << duration2.count() << " microseconds" << "\n";
+    float total = 0.0;
+    int totalsize = 0;
+    int totaldataBlocksAccessed = 0;
+    while(!searchrange.empty()){
+        vector<Record*> records = *(searchrange.back().secondary_key);
+        searchrange.pop_back();
+        totalsize += records.size();
+        for(int i=0;i<records.size();i++){
+            total += records[i]->fg3_pct_home;
+        }
+        totaldataBlocksAccessed += countDataBlocks(records, database);
+    }
+    float average = total/totalsize;
+    cout << "Total fg3_pct_home: " << total << "\n";
+    cout << "All records with values 0.6 to 1 for fg_pct_home: " << totalsize << "\n";
+    cout << "Average fg3_pct_home: " << average << "\n";
+    cout << "Number of data blocks accessed: " << totaldataBlocksAccessed << "\n";
+    bptree.displayTree(bptree.getRoot(),true);
+    cout << "\n\n=====================================================" << endl;
+    cout << "-------------Experiment 5-----------------"<<"\n";
+    bptree.displayTree(bptree.getRoot(),true);
     vector<keys_struct> keysToBeDeleted;
     bptree.removeRange(0,0.35);
     cout << "=====================================================" << endl;
-    bptree.displayTree(bptree.getRoot(),true);
     return 0;
 }

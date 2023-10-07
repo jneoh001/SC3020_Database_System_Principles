@@ -150,3 +150,23 @@ for 0 to end{
             removeInternal(rightSibling->key[0], findParent(root, hitList.back()), rightSibling);
         }
     }
+
+                while (cursor->isLeaf == false)
+            {
+                for (int i = 0; i < cursor->size; i++)
+                {
+                    if (x < cursor->key[i].key_value) // less than the key, that means we've got it, its within this node
+                    {
+                        cursor = cursor->ptr[i]; // next node is followed by pointer of the key
+                        break;                   // break from for loop
+                    }
+
+                    if (i == cursor->size - 1) // the last key already and x is still more than key, must go to next internal node
+                    {
+                        cursor = cursor->ptr[i + 1]; // go to the next internal node
+                        break;                       // break from for loop
+                    }
+                } // end for, after this, final cursor should be on the leaf node
+                count++;
+            }
+            cout << "Number of index nodes accessed: " << count << "\n";
