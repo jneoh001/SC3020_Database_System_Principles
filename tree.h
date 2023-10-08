@@ -888,10 +888,10 @@ public:
     }
 
     vector<keys_struct> searchRange(float keymin, float keymax){
-        if(root==NULL)return;
         Node *leftBound = root, *rightBound = root;
         vector<keys_struct> results;
         vector<Node*> visited;
+        if(root==NULL) return results;
 
         int count = 1;
         while(rightBound->isLeaf == false){
