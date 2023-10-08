@@ -367,11 +367,11 @@ class BPlusTree
                 break;
             }
         }
+        cursor->key[j].reset();
         for (int i = j; i < cursor->size-1; i++)
         { // Continue from wherever j stopped; move keys forward
             cursor->key[i] = cursor->key[i + 1];
         }
-        cursor->key[j].reset();
         // Delete the empty NODE
         for (j = 0; j < cursor->size; j++)
         {
@@ -380,14 +380,13 @@ class BPlusTree
                 break;
             }
         }
+        cursor->ptr[j] = nullptr;
         for (int i = j; i < cursor->size; i++)
         {
             cursor->ptr[i] = cursor->ptr[i + 1]; // Pointer moved forward
         }
-        cursor->ptr[j] = nullptr;
-        //child->~Node();
         cursor->size--;
-        if (cursor->size >= (MAX_KEYS_NODE + 1) / 2 - 1)
+        if (cursor->size >= (MAX_KEYS_NODE + 1) / 2)
         { // Check for too few keys
             return;
         }
@@ -871,8 +870,15 @@ public:
         if (leftSibling > -1)
         {
             Node *leftNode = parent->ptr[leftSibling];
+            for(int i = leftNode->size, j = 0; j < cursor->size; i++, j++)
+            {
+                leftNode->key[i] = cursor->key[j];
+            }
+            leftNode->ptr[leftNode->size] = NULL;
+            leftNode->size += cursor->size;
+            leftNode->ptr[leftNode->size] = cursor->ptr[cursor->size];
             // transfer all keys and pointers to leftnode, maintain pointer to new next leaf node at max
-            merge(leftNode, cursor);
+            //merge(leftNode, cursor);
             // call removeinternal
             removeInternal(parent->key[leftSibling], parent, cursor);
             // cursor->~Node();
@@ -881,8 +887,15 @@ public:
         {
             // if left sibling does not exist, right sibling must exist since cursor is not root
             Node *rightNode = parent->ptr[rightSibling];
+            for(int i = cursor->size, j = 0; j < rightNode->size; i++, j++)
+            {
+                cursor->key[i] = rightNode->key[j];
+            }
+            cursor->ptr[cursor->size] = NULL;
+            cursor->size += rightNode->size;
+            cursor->ptr[cursor->size] = rightNode->ptr[rightNode->size];
             // transfer keys and ptrs to cursor, maintain pointer to next leaf
-            merge(cursor, rightNode);
+            //merge(cursor, rightNode);
             removeInternal(parent->key[rightSibling - 1], parent, rightNode);
         }
     }
@@ -961,8 +974,8 @@ public:
         hitList = searchRange(keymin, keymax);
         while (!hitList.empty())
         {
-            remove(hitList.back());
-            hitList.pop_back();
+            remove(hitList.front());
+            hitList.erase(hitList.begin());
         }
     }
 
@@ -980,6 +993,8 @@ public:
             {
                 cursor = currentLevel.front();
                 currentLevel.pop();
+
+                if(cursor == nullptr) continue;
 
                 for (int i = 0; i < cursor->size; i++)
                     cout << cursor->key[i].key_value << " ";

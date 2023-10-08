@@ -70,7 +70,7 @@ int main(){
     keys_struct *keys = new keys_struct[database.size()];
 
     // Insert into B+ tree
-    for (unsigned int i=0;i<database.size();i++){
+    for (unsigned int i=0;i<1000;i++){
         tuple<string*,uint>AddressOfRecord = database[i];
         // Reverse Engineer to retrieve the record and insert into B+ plus tree
         string* blockAddress = get<0>(AddressOfRecord);
@@ -127,12 +127,12 @@ int main(){
     cout << "All records with values 0.6 to 1 for fg_pct_home: " << totalsize << "\n";
     cout << "Average fg3_pct_home: " << average << "\n";
     cout << "Number of data blocks accessed: " << totaldataBlocksAccessed << "\n";
-    bptree.displayTree(bptree.getRoot(),true);
     cout << "\n\n=====================================================" << endl;
     cout << "-------------Experiment 5-----------------"<<"\n";
     bptree.displayTree(bptree.getRoot(),true);
     vector<keys_struct> keysToBeDeleted;
-    bptree.removeRange(0,0.35);
+    bptree.removeRange(0.0,0.35);
+    bptree.displayTree(bptree.getRoot(),true);
     cout << "=====================================================" << endl;
     return 0;
 }
