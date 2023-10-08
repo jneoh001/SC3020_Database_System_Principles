@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+#include <thread>
 #include "DataLoader.h"
 #include "tree.h"
 
@@ -102,89 +103,91 @@ int main(){
 
     cout << "-------------Done inserting into B+ tree-------------"<<"\n"<<"\n";
     cout << "=====================================================" << endl;
-    // cout << "-------------Experiment 3-----------------"<<"\n";
-    // auto start = chrono::high_resolution_clock::now();
-    // Node * node = bptree.search(0.5);
-    // auto stop = chrono::high_resolution_clock::now();
-    // auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-    // cout << "Time taken to search for key 0.5: " << duration.count() << " microseconds" << "\n";
-    // if(node != nullptr){
-    //     keys_struct key = node->getSpecificKey(0.5);
-    //     vector<Record*> records = *(key.secondary_key);
+    cout << "-------------Experiment 3-----------------"<<"\n";
+    auto start = chrono::high_resolution_clock::now();
+    Node * node = bptree.search(0.5);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+    cout << "Time taken to search for key 0.5: " << duration.count() << " microseconds" << "\n";
+    if(node != nullptr){
+        keys_struct key = node->getSpecificKey(0.5);
+        vector<Record*> records = *(key.secondary_key);
 
-    //     float total = 0.0;
-    //     for(int i=0;i<records.size();i++){
-    //         total += records[i]->fg3_pct_home;
-    //     }
-    //     float average = total/records.size();
-    //     int dataBlocksAccessed = countDataBlocks(records, database);
+        float total = 0.0;
+        for(int i=0;i<records.size();i++){
+            total += records[i]->fg3_pct_home;
+        }
+        float average = total/records.size();
+        int dataBlocksAccessed = countDataBlocks(records, database);
 
-    //     auto start = chrono::high_resolution_clock::now();
-    //     int bruteForce = countDataBlocksBruteForce(records, database);
-    //     auto stop = chrono::high_resolution_clock::now();
-    //     auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-    //     cout << "Total fg3_pct_home: " << total << "\n";
-    //     cout << "All records with values 0.5 for fg_pct_home: " << records.size() << "\n";
-    //     cout << "Average fg3_pct_home: " << average << "\n";
-    //     cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
-    //     cout << "Number of data blocks accessed via brute force linear scan: "<< bruteForce << "\n";
-    //     cout << "Time taken for brute force liear scan: " << duration.count() << " microseconds" << "\n";
-    // }
+        auto start1 = chrono::high_resolution_clock::now();
+        int bruteForce = countDataBlocksBruteForce(records, database);
+        auto stop1 = chrono::high_resolution_clock::now();
+        auto duration1 = chrono::duration_cast<chrono::microseconds>(stop1 - start1);
+        cout << "Total fg3_pct_home: " << total << "\n";
+        cout << "All records with values 0.5 for fg_pct_home: " << records.size() << "\n";
+        cout << "Average fg3_pct_home: " << average << "\n";
+        cout << "Number of data blocks accessed: " << dataBlocksAccessed << "\n";
+        cout << "Number of data blocks accessed via brute force linear scan: "<< bruteForce << "\n";
+        cout << "Time taken for brute force liear scan: " << duration1.count() << " microseconds" << "\n";
+    }
 
-    // cout << "\n\n=====================================================" << endl;
-    // cout << "-------------Experiment 4-----------------"<<"\n";
-    // auto start1 = chrono::high_resolution_clock::now();
-    // vector<keys_struct> searchrange = bptree.searchRange(0.6, 1.00);
-    // auto stop1 = chrono::high_resolution_clock::now();
-    // auto duration1 = chrono::duration_cast<chrono::microseconds>(stop1 - start1);
-    // cout << "Time taken to search for key range 0.6 to 1: " << duration1.count() << " microseconds" << "\n";
-    // float total = 0.0;
-    // int totalsize = 0;
-    // int totaldataBlocksAccessed = 0;
-    // int totaldataBlocksAccessedBruteForce = 0;
-    // for(int i= 0;i<searchrange.size();i++){
-    //     vector<Record*> records = *(searchrange[i].secondary_key);
-    //     totalsize += records.size();
-    //     for(int i=0;i<records.size();i++){
-    //         total += records[i]->fg3_pct_home;
-    //     }
-    //     totaldataBlocksAccessed += countDataBlocks(records, database);
-    // }
-    // float average = total/totalsize;
-    // auto start2 = chrono::high_resolution_clock::now();
-    // for(int i=0;i<searchrange.size();i++){
-    //     vector<Record*> records = *(searchrange[i].secondary_key);
-    //     totaldataBlocksAccessedBruteForce += countDataBlocksBruteForce(records, database);
-    // }
-    // auto stop2 = chrono::high_resolution_clock::now();
-    // auto duration2 = chrono::duration_cast<chrono::microseconds>(stop2 - start2);
-    // cout << "Total fg3_pct_home: " << total << "\n";
-    // cout << "All records with values 0.6 to 1 for fg_pct_home: " << totalsize << "\n";
-    // cout << "Average fg3_pct_home: " << average << "\n";
-    // cout << "Number of data blocks accessed: " << totaldataBlocksAccessed << "\n";
-    // cout << "Number of data blocks accessed via brute force linear scan: "<< totaldataBlocksAccessedBruteForce << "\n";
-    // cout << "Time taken for brute force liear scan: " << duration2.count() << " microseconds" << "\n";
+    cout << "\n\n=====================================================" << endl;
+    cout << "-------------Experiment 4-----------------"<<"\n";
+    auto start2 = chrono::high_resolution_clock::now();
+    vector<keys_struct> searchrange = bptree.searchRange(0.6, 1.00);
+    auto stop2 = chrono::high_resolution_clock::now();
+    auto duration2 = chrono::duration_cast<chrono::microseconds>(stop2 - start2);
+    cout << "Time taken to search for key range 0.6 to 1: " << duration2.count() << " microseconds" << "\n";
+    float total = 0.0;
+    int totalsize = 0;
+    int totaldataBlocksAccessed = 0;
+    int totaldataBlocksAccessedBruteForce = 0;
+    for(int i= 0;i<searchrange.size();i++){
+        vector<Record*> records = *(searchrange[i].secondary_key);
+        totalsize += records.size();
+        for(int i=0;i<records.size();i++){
+            total += records[i]->fg3_pct_home;
+        }
+        totaldataBlocksAccessed += countDataBlocks(records, database);
+    }
+    float average = total/totalsize;
+    auto start3 = chrono::high_resolution_clock::now();
+    for(int i=0;i<searchrange.size();i++){
+        vector<Record*> records = *(searchrange[i].secondary_key);
+        totaldataBlocksAccessedBruteForce += countDataBlocksBruteForce(records, database);
+    }
+    auto stop3 = chrono::high_resolution_clock::now();
+    auto duration3 = chrono::duration_cast<chrono::microseconds>(stop3 - start3);
+    cout << "Total fg3_pct_home: " << total << "\n";
+    cout << "All records with values 0.6 to 1 for fg_pct_home: " << totalsize << "\n";
+    cout << "Average fg3_pct_home: " << average << "\n";
+    cout << "Number of data blocks accessed: " << totaldataBlocksAccessed << "\n";
+    cout << "Number of data blocks accessed via brute force linear scan: "<< totaldataBlocksAccessedBruteForce << "\n";
+    cout << "Time taken for brute force liear scan: " << duration3.count() << " microseconds" << "\n";
     cout << "\n\n=====================================================" << endl;
     cout << "-------------Experiment 5-----------------"<<"\n";
     vector<keys_struct> keysToBeDeleted;
-    int totaldataBlocksAccessedBruteForce = 0;
-    auto start2 = chrono::high_resolution_clock::now();
+    int totaldataBlocksAccessedBruteForce2 = 0;
+    auto start4 = chrono::high_resolution_clock::now();
     keysToBeDeleted = bptree.searchRange(0.0,0.35);
     for(int i=0;i<keysToBeDeleted.size();i++){
         vector<Record*> records = *(keysToBeDeleted[i].secondary_key);
-        totaldataBlocksAccessedBruteForce += countDataBlocksBruteForce(records, database);
+        totaldataBlocksAccessedBruteForce2 += countDataBlocksBruteForce(records, database);
     }
-    auto stop2 = chrono::high_resolution_clock::now();
-    auto duration2 = chrono::duration_cast<chrono::microseconds>(stop2 - start2);
-    auto start1 = chrono::high_resolution_clock::now();
+    auto stop4 = chrono::high_resolution_clock::now();
+    auto duration4 = chrono::duration_cast<chrono::microseconds>(stop4 - start4);
+    cout << "Number of data blocks accessed via brute force linear scan: "<< totaldataBlocksAccessedBruteForce2 << "\n";
+    auto start5 = chrono::high_resolution_clock::now();
     keysToBeDeleted = bptree.searchRange(0.0,0.35);
     for(int i=0;i<keysToBeDeleted.size();i++){
         bptree.remove(keysToBeDeleted[i]);
     }
-    auto stop1 = chrono::high_resolution_clock::now();
-    auto duration1 = chrono::duration_cast<chrono::microseconds>(stop1 - start1);
-    cout << "Time taken to search for key range 0 to 0.35 and delete them: " << duration1.count() << " microseconds" << "\n";
+    auto stop5 = chrono::high_resolution_clock::now();
+    auto duration5 = chrono::duration_cast<chrono::microseconds>(stop5 - start5);
+    cout << "Time taken to search for key range 0 to 0.35 and delete them: " << duration5.count() << " microseconds" << "\n";
     bptree.displayTree(bptree.getRoot(),true);
     cout << "=====================================================" << endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100000));
     return 0;
 }
