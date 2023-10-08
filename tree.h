@@ -42,13 +42,6 @@ public:
         isLeaf = true;
     }
 
-    ~Node()
-    {
-        delete[] key;
-        delete[] ptr;
-        delete this;
-    }
-
     //getter functions
     keys_struct *getKey()
     {
@@ -364,10 +357,10 @@ class BPlusTree
         {
             if (cursor->key[j].key_value == x.key_value)
             {
+                cursor->key[j].reset();
                 break;
             }
         }
-        cursor->key[j].reset();
         for (int i = j; i < cursor->size-1; i++)
         { // Continue from wherever j stopped; move keys forward
             cursor->key[i] = cursor->key[i + 1];
@@ -380,13 +373,13 @@ class BPlusTree
                 break;
             }
         }
-        cursor->ptr[j] = nullptr;
+        //cursor->ptr[j] = nullptr;
         for (int i = j; i < cursor->size; i++)
         {
             cursor->ptr[i] = cursor->ptr[i + 1]; // Pointer moved forward
         }
         cursor->size--;
-        if (cursor->size >= (MAX_KEYS_NODE + 1) / 2)
+        if (cursor->size >= (MAX_KEYS_NODE + 1) / 2 - 1)
         { // Check for too few keys
             return;
         }
@@ -441,11 +434,11 @@ class BPlusTree
                 {
                     rightNode->key[i] = rightNode->key[i + 1];
                 }
+                cursor->ptr[cursor->size + 1] = rightNode->ptr[0];
                 for (int i = 0; i < rightNode->size; ++i)
                 {
                     rightNode->ptr[i] = rightNode->ptr[i + 1];
                 }
-
                 cursor->size++;
                 rightNode->size--;
                 return;
@@ -754,14 +747,14 @@ public:
         while (cursor->isLeaf == false)
         {
             // set parent as cursor before going into next node
-            parent = cursor;
             for (int i = 0; i < cursor->size; i++)
             {
+                parent = cursor;
+                // leftsibling and rightsibling are int, put checking outside of loop
+                leftSibling = i - 1;
+                rightSibling = i + 1;
                 if (key.key_value < cursor->key[i].key_value)
                 {
-                    // leftsibling and rightsibling are int, put checking outside of loop
-                    leftSibling = i - 1;
-                    rightSibling = i + 1;
                     cursor = cursor->ptr[i];
                     break;
                 }
@@ -791,7 +784,6 @@ public:
                 return;
             }
         }
-        cursor->size--;
         // move all keys and ptr to the right of found key to the left
         // max number of keys is maxkeysnode-1, no illegal access should occur
         for (int j = i; j < cursor->size; j++)
@@ -799,6 +791,7 @@ public:
             cursor->key[j] = cursor->key[j + 1];
             cursor->ptr[j] = cursor->ptr[j + 1];
         }
+        cursor->size--;
         // remove last key and ptr (unnecessary but just in case)
         cursor->key[cursor->size].reset();
         cursor->ptr[cursor->size] = nullptr;
@@ -881,7 +874,10 @@ public:
             //merge(leftNode, cursor);
             // call removeinternal
             removeInternal(parent->key[leftSibling], parent, cursor);
-            // cursor->~Node();
+            delete [] cursor->key;
+            delete [] cursor->ptr;
+            delete cursor;
+
         }
         else
         {
@@ -897,6 +893,9 @@ public:
             // transfer keys and ptrs to cursor, maintain pointer to next leaf
             //merge(cursor, rightNode);
             removeInternal(parent->key[rightSibling - 1], parent, rightNode);
+            delete [] rightNode->key;
+            delete [] rightNode->ptr;
+            delete rightNode;
         }
     }
 
@@ -994,7 +993,9 @@ public:
                 cursor = currentLevel.front();
                 currentLevel.pop();
 
-                if(cursor == nullptr) continue;
+                if(cursor == nullptr || cursor==NULL){
+                    cout << cursor->getKey() << endl;
+                }
 
                 for (int i = 0; i < cursor->size; i++)
                     cout << cursor->key[i].key_value << " ";
