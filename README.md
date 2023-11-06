@@ -7,5 +7,4 @@
 
 **About**
 
-Project 1 - B+ Tree Implementation \
-Project 2 - SQL Query Visualisation
+Project 1 - B+ Tree Implementation in C++
